@@ -1,7 +1,7 @@
 use anchor_lang::prelude::*;
 
 // This is your program's on-chain address - think of it as your contract's ID
-declare_id!("2n1xgfAV4AfknWrffNS8ezdPE3iPtNHeJt1T6u5AR3eE");
+declare_id!("HY44Fingwd4Wozs5fA2QrJUqKhoxmXWF5C8QUjjqMB4S");
 
 #[program]
 pub mod treasury {
