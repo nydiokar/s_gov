@@ -9,11 +9,12 @@ pub mod treasury {
 
     // Instruction 1: Initialize the treasury
     // This creates the main treasury account and sets the admin
-    pub fn initialize(ctx: Context<Initialize>, treasury_bump: u8) -> Result<()> {
+    pub fn initialize(ctx: Context<Initialize>, treasury_bump: u8, vault_bump: u8) -> Result<()> {
         let treasury = &mut ctx.accounts.treasury;
 
         treasury.admin = ctx.accounts.admin.key();
         treasury.bump = treasury_bump;
+        treasury.vault_bump = vault_bump;
         treasury.total_members = 0;
 
         msg!("Treasury initialized by admin: {}", ctx.accounts.admin.key());
@@ -62,12 +63,13 @@ pub mod treasury {
         );
 
         // Transfer SOL from treasury vault to recipient
-        let treasury_seeds = &[
-            b"treasury",
-            treasury.admin.as_ref(),
-            &[treasury.bump],
+        let treasury_key = treasury.key();
+        let vault_seeds = &[
+            b"vault",
+            treasury_key.as_ref(),
+            &[treasury.vault_bump],
         ];
-        let signer_seeds = &[&treasury_seeds[..]];
+        let signer_seeds = &[&vault_seeds[..]];
 
         let cpi_context = CpiContext::new_with_signer(
             ctx.accounts.system_program.to_account_info(),
@@ -96,6 +98,7 @@ pub mod treasury {
 pub struct Treasury {
     pub admin: Pubkey,           // Who controls this treasury
     pub bump: u8,                // PDA bump seed (for security)
+    pub vault_bump: u8,          // Vault PDA bump seed
     pub total_members: u32,      // How many users have access
 }
 
@@ -130,7 +133,7 @@ pub struct Initialize<'info> {
     #[account(
         init,
         payer = admin,
-        space = 8 + 32 + 1 + 4,
+        space = 8 + 32 + 1 + 1 + 4,  // discriminator + admin + bump + vault_bump + total_members
         seeds = [b"treasury", admin.key().as_ref()],
         bump
     )]
